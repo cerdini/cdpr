@@ -26,9 +26,6 @@
 #define CDPRS_DATA 3
 #define CDPRS_SEND 4
 
-#ifdef SOLARIS
-#define  INADDR_NONE             ((in_addr_t) 0xffffffff)
-#endif /* SOLARIS */
 
 int	cdprs_action(int action, char *string, int verbose);
 void set_location(char *loc);
