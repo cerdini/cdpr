@@ -47,7 +47,6 @@ struct singleton
 */
 int timeout;
 int cdprs;
-int cdprs_cmdline;
 pcap_t *handle;
 
 /*

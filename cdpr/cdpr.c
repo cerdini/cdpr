@@ -449,10 +449,10 @@ usage(void)
 	puts("v[vv]: Set verbose mode");
 	puts("\n** Options dealing with server updates: **");
 	puts(" u: Send cdpr information to a cdpr server\n    requires config file as arg");
-	puts(" l: Location/description of this port for use with -u");
-	puts(" n: Override the hostname reported to the server for use with -u");
-	puts(" s: Server to send information to (overridden by -u)");
-	puts(" p: Path of server script to send data to (overridden by -u)");
+	puts(" l: Location/description of this port for use with -u or -s and -p");
+	puts(" n: Override the hostname reported to the server for use with -u or -s and -p");
+	puts(" s: Server to send information to requires -p (overridden by -u)");
+	puts(" p: Path of server script to send data to requires -s (overridden by -u)");
 
 	exit(0);
 }
@@ -489,13 +489,14 @@ main(int argc, char *argv[])
 	int verbose=0;
 	int locdetail=0;
 	int nameoverride=0;
+	int cdprs_config=0;
+	int cdprs_cmdline=0;
 	unsigned int seconds=300;
 	time_t start_time=0;
 
 	/* Zero out some global variables */
 	timeout=1;
 	cdprs=0;
-	cdprs_cmdline=0;
 	memset (errbuf, 0, sizeof (errbuf));
 
 	/* Print out header */
@@ -519,9 +520,11 @@ main(int argc, char *argv[])
 			case 'u':
 				conf = optarg;
 				cdprs = 1;
+				cdprs_config=1;
 				if(cdprs_cmdline)
 				{
-					puts("Overriding comand line server arguments with config file\n");
+					puts("Overriding command line server arguments with config file\n");
+					cdprs_cmdline = 0;
 				}
 				cdprs_action(CDPRS_INIT, conf, 0);
 				break;
@@ -535,13 +538,27 @@ main(int argc, char *argv[])
 				break;
 			case 's':
 				svr = optarg;
-				cdprs = 1;
-				cdprs_cmdline = 1;
+				if(cdprs_config)
+				{
+					puts("Config file overrides cmd line");
+				}
+				else
+				{
+					if(cdprs != 1) cdprs = 1;
+					cdprs_cmdline++;
+				}
 				break;
 			case 'p':
 				path = optarg;
-				if(cdprs != 1) cdprs = 1;
-				if(cdprs_cmdline != 1) cdprs_cmdline = 1;
+				if(cdprs_config)
+				{
+					puts("Config file overrides cmd line");
+				}
+				else
+				{
+					if(cdprs != 1) cdprs = 1;
+					cdprs_cmdline++;
+				}
 				break;
 			case 'h':
 			case '?':
@@ -554,10 +571,15 @@ main(int argc, char *argv[])
 	** build data structure using functions that are normally used
 	** when parsing the config file
 	*/
-	if(cdprs && cdprs_cmdline)
+	if(cdprs && (cdprs_cmdline == 2))
 	{
 		cdprs_action(CDPRS_INIT, "", 0);
 		do_something_with(svr, path);
+	}
+	else if(cdprs && (cdprs_cmdline != 0))
+	{
+		puts("Error only -s or -p was specified but not both");
+		exit(2);
 	}
 
 	/* Get a pcap capable device */

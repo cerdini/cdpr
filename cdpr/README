@@ -15,6 +15,25 @@ set your timeout to something greater than 60. There is a default timeout of 5 m
 so that should you not provide a timeout, cdpr will still exit if there is no CDP
 packet received within 5 minutes.
 
+This version also allows you to specify the server and URL to send CDP updates to on
+the command line. The following command line options have been added:
+
+-s server: Server to send information to requires -p (overridden by -u)
+-p path: Path of server script to send data to requires -s (overridden by -u)
+
+As you can see if you specify -s, -p and -u on the command line, the config file is actually
+used, and the -s and -p options are ignored. Both the -s and -p options must be specified and
+cdpr will exit if only one of them is given. An example as to how to use the -s and -p flags:
+
+	cdpr -d eth0 -s localhost -p /cgi-bin/cdprs.cgi -t 120
+
+This will listen for a CDP announcement on device eth0 for up to 2 minutes (120 seconds) and
+send the results to the webserver running on the local machine by calling the /cgi-bin/cdprs.cgi
+page.
+
+*Versions 2.0.1 - 2.0.5
+These version were never officially released, they were code cleanups and timeout implementation.
+
 *Version 2.0.0
 
 This version provides the functionallity to report CDP data back to a centralized server.
