@@ -33,8 +33,9 @@
 */
 #define CDPRS_INIT 1
 #define CDPRS_SETIP 2
-#define CDPRS_DATA 3
-#define CDPRS_SEND 4
+#define CDPRS_SETPORT 3
+#define CDPRS_DATA 4
+#define CDPRS_SEND 5
 
 struct singleton
 {

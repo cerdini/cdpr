@@ -137,7 +137,7 @@ urlencode(char *s, int slen, int *new_len)
 }
 
 int
-send_update(char *ip, char *msg, int verbose)
+send_update(char *ip, char *msg, int port, int verbose)
 {
 	int sockfd, msg_len, bytes_sent;
 	struct sockaddr_in cdprs_addr;
@@ -150,7 +150,7 @@ send_update(char *ip, char *msg, int verbose)
 	}
 	
 	cdprs_addr.sin_family = AF_INET;
-	cdprs_addr.sin_port = htons(80);
+	cdprs_addr.sin_port = htons(port);
 	cdprs_addr.sin_addr.s_addr = inet_addr(ip);
 	memset(&(cdprs_addr.sin_zero), '\0', 8);
 	
@@ -193,6 +193,7 @@ cdprs_action(int action, char *string, int verbose)
 {
 	static char *msg;
 	static char *ip;
+	static int port;
 	static int init_done = 0;
 	const char http_hdr[] = "GET ";
 
@@ -228,6 +229,10 @@ cdprs_action(int action, char *string, int verbose)
 			/* Set IP Address */
 			ip = string;
 			break;
+		case CDPRS_SETPORT:
+			/* Set the network port */
+			port = verbose;
+			break;
 		case CDPRS_DATA:
 			/* Append string to msg */
 			strcat(msg,string);
@@ -236,7 +241,7 @@ cdprs_action(int action, char *string, int verbose)
 			/* Tack on the hostname and footer and send data to server */
 //			get_hostname();
 			cdprs_footer();
-			send_update(ip,msg,verbose);
+			send_update(ip,msg,port,verbose);
 			/* We have sent the msg to the server, free the mem used by msg */
 			free(msg);
 #ifdef WIN32

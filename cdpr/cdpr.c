@@ -56,6 +56,7 @@
 *						of 5 minutes. Got rid of pktcap.c and timeout.c as they are no
 *						longer needed.
 * 2.1.0	LO	03-11-08	Release - Got timeout code working on WIN32 port
+* 2.2.0	LO	04-04-14	Added the ability specify the port to send the cdpr updates to.
 */
 
 /*#include "pcap.h" */
@@ -451,7 +452,7 @@ usage(void)
 	puts(" u: Send cdpr information to a cdpr server\n    requires config file as arg");
 	puts(" l: Location/description of this port for use with -u or -s and -p");
 	puts(" n: Override the hostname reported to the server for use with -u or -s and -p");
-	puts(" s: Server to send information to requires -p (overridden by -u)");
+	puts(" s: Server to send information to specify port with a : after Server/IP\n     Example: 192.168.1.20:88 (default: 80) requires -p (overridden by -u)");
 	puts(" p: Path of server script to send data to requires -s (overridden by -u)");
 
 	exit(0);
@@ -483,7 +484,7 @@ main(int argc, char *argv[])
 	bpf_u_int32 net;
 	struct pcap_pkthdr header;
 	const u_char *packet;
-	char version[] = "2.1.0";
+	char version[] = "2.2.0";
 
 	int c;
 	int verbose=0;
@@ -501,7 +502,7 @@ main(int argc, char *argv[])
 
 	/* Print out header */
 	printf("cdpr - Cisco Discovery Protocol Reporter\nVersion %s\n", version);
-	printf("Copyright (c) 2002-2003 - MonkeyMental.com\n\n");
+	printf("Copyright (c) 2002-2004 - MonkeyMental.com\n\n");
 
 	/* Check command-line options */
 	while((c = getopt(argc, argv, "d:t:vhu:l:n:s:p:")) !=EOF)

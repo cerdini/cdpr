@@ -34,20 +34,33 @@ void
 do_something_with (char *ip, char *url)
 {
 	struct hostent *h;
+	char *addy;
+	int port;
 
 	if (ip && url)
 	{
-		if (is_ip (ip))
+		if((addy = strtok(ip,":")) == NULL)
 		{
-/*			printf ("ip addr  = \"%s\", url = \"%s\"\n", ip, url); */
-			cdprs_action(CDPRS_SETIP, ip, 1);
-			cdprs_action(CDPRS_DATA, url, 1);
-			/* Add the ? to the end of the url */
-			cdprs_action(CDPRS_DATA, "?", 1);
+			port = 80;
 		}
 		else
 		{
-/*			printf ("hostname = \"%s\", url = \"%s\"\n", ip, url); */
+			char *tport = strtok(NULL,":");
+			port = atoi(tport);
+		}
+		if (is_ip (ip))
+		{
+			printf ("ip addr  = \"%s\", url = \"%s\"\n", ip, url);
+			cdprs_action(CDPRS_SETIP, ip, 1);
+			cdprs_action(CDPRS_SETPORT, NULL, port);
+			cdprs_action(CDPRS_DATA, url, 1);
+			/* Add the ? to the end of the url */
+			cdprs_action(CDPRS_DATA, "?", 1);
+			return;
+		}
+		else
+		{
+			printf ("hostname = \"%s\", url = \"%s\"\n", ip, url);
 			/* Get the IP of the hostname */
 			if((h=gethostbyname(ip)) == NULL)
 			{
@@ -60,6 +73,7 @@ do_something_with (char *ip, char *url)
 			else
 			{
 				cdprs_action(CDPRS_SETIP, inet_ntoa(*((struct in_addr *)h->h_addr)), 1);
+				cdprs_action(CDPRS_SETPORT, NULL, port);
 				cdprs_action(CDPRS_DATA, url, 1);
 				/* Add the ? to the end of the url */
 				cdprs_action(CDPRS_DATA, "?", 1);
