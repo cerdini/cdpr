@@ -47,6 +47,7 @@
 * 1.1.5	LO	03-06-23	Fix bug where hostname would not be transmitted w/o location set
 * 2.0.0	LO	03-06-25	Release - Major revision change due to server reporting code
 * 2.0.1	LO	03-07-01	Add sys/types.h to the includes in conffile.c for BSD support
+* 2.0.2 LO	03-08-03	Enable timeouts so that cdpr won't wait forever looking for a packet
 */
 
 #include "pcap.h"
@@ -435,11 +436,13 @@ int
 usage(void)
 {
 	puts("d: Specify device to use (eth0, hme0, etc.)");
-	puts("v[vv]: Set verbose mode");
-	puts("u: Send cdpr information to a cdpr server\n   requires config file as arg");
-	puts("l: Location/description of this port for use with -u");
-	puts("n: Override the hostname reported to the server");
 	puts("h: Print this usage");
+	puts("t: time in seconds to abort waiting for a packet");
+	puts("v[vv]: Set verbose mode");
+	puts("\n** Options dealing with server updates: **");
+	puts(" u: Send cdpr information to a cdpr server\n    requires config file as arg");
+	puts(" l: Location/description of this port for use with -u");
+	puts(" n: Override the hostname reported to the server");
 
 	exit(0);
 }
@@ -452,7 +455,6 @@ main(int argc, char *argv[])
 	char *conf = NULL;
 	char *loc = NULL;
 	char *name = NULL;
-//	char uname[256];
 	char errbuf[PCAP_ERRBUF_SIZE];
 	struct bpf_program filter;
 	/*
@@ -469,12 +471,14 @@ main(int argc, char *argv[])
 	bpf_u_int32 net;
 	struct pcap_pkthdr header;
 	const u_char *packet;
-	char version[] = "2.0.1";
+	char version[] = "2.0.2";
 
 	int c;
 	int verbose=0;
 	int locdetail=0;
 	int nameoverride=0;
+	int settimeout=0;
+	unsigned int seconds=0;
 
 	memset (errbuf, 0, sizeof (errbuf));
 
@@ -483,7 +487,7 @@ main(int argc, char *argv[])
 	printf("Copyright (c) 2002-2003 - MonkeyMental.com\n\n");
 
 	/* Check command-line options */
-	while((c = getopt(argc, argv, "d:vu:l:n:h")) !=EOF)
+	while((c = getopt(argc, argv, "d:t:vhu:l:n:")) !=EOF)
 		switch(c)
 		{
 			case 'd':
@@ -491,6 +495,10 @@ main(int argc, char *argv[])
 				break;
 			case 'v':
 				verbose++;
+				break;
+			case 't':
+				seconds = atoi(optarg);
+				settimeout = 1;
 				break;
 			case 'u':
 				conf = optarg;
@@ -585,6 +593,19 @@ main(int argc, char *argv[])
 	pcap_setfilter(handle, &filter);
 	pcap_freecode(&filter);
 
+	/* If timeout is enabled, enable the timeout handler and set timeout */
+	if(settimeout > 0)
+	{
+		if(enable_timeout() != 0)
+		{
+			printf("Error setting timeout\n");
+			exit(1);
+		}
+		else
+		{
+			set_timeout(seconds);
+		}
+	}
 	/* Get the next packet that comes in, we only need one */
 	printf("Waiting for CDP advertisement:\n");
 	printf("(default config is to transmit CDP packets every 60 seconds)\n");

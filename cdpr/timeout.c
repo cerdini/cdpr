@@ -20,17 +20,39 @@
 * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
+#include <stdio.h>
+#include <signal.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include "cdpr.h"
 
-#define CDPRS_INIT 1
-#define CDPRS_SETIP 2
-#define CDPRS_DATA 3
-#define CDPRS_SEND 4
+void
+timeout_recvd(int signum)
+{
+	printf("Timeout received. (signal: %d)\n", signum);
+	exit(1);
+}
 
+int
+enable_timeout(void)
+{
+	struct sigaction sastruct;
 
-int	cdprs_action(int action, char *string, int verbose);
-void set_location(char *loc);
-void get_hostname(int nameoverride, char *name);
-void read_file(char *file);
-char * urlencode(char *s, int slen, int *new_len);
-int enable_timeout(void);
-int set_timeout(unsigned int seconds);
+	sastruct.sa_handler = (void *)timeout_recvd;
+	sastruct.sa_flags = SA_RESETHAND;
+	
+	return sigaction(SIGALRM, &sastruct, NULL);
+}
+
+int
+set_timeout(unsigned int seconds)
+{
+	/*
+	** Set the alarm time. CDPR will have ~seconds to get a CDP
+	** packet before the alarm goes off. It should be a sufficient
+	** time to do whatever needs to be done before searching for a
+	** packet plus the time to search for a packet.
+	*/
+
+	return alarm(seconds);
+}
