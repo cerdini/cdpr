@@ -9,6 +9,9 @@
 #include "netinet/in.h"
 #include "arpa/inet.h"
 #include "netdb.h"
+#if SOLARIS
+#include "u_ints.h"
+#endif
 #endif
 
 int
@@ -46,7 +49,10 @@ do_something_with (char *ip, char *url)
 			/* Get the IP of the hostname */
 			if((h=gethostbyname(ip)) == NULL)
 			{
-				herror("gethostbyname");
+				/* herror is obsolete, and doesn't exist on Solaris
+				** herror("gethostbyname");
+				*/
+				puts("gethostbyname failed");
 				exit(1);
 			}
 			else

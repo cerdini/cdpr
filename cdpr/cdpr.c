@@ -64,8 +64,8 @@ int cdprs=0;
 void
 dump_ip (const u_char *ip, int len)
 {
-	char *switch_ip;
-	if(cdprs==1)
+	char switch_ip[100];
+	if(cdprs>=1)
 	{
 		sprintf (switch_ip, "switch_ip=%d.%d.%d.%d",
 			(int) ip[0], (int) ip[1], (int) ip[2], (int) ip[3]);
