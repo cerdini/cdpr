@@ -1,0 +1,14 @@
+cdpr - Cisco Discovery Protocol Reporter
+Copyright (c) 2002 - MonkeyMental.com
+
+cdpr requires the pcap library (libpcap).
+
+Since this is a really simple program, there is no real build/install process.
+
+To build:
+
+make
+
+To install:
+
+copy the resulting binary (cdpr) to wherever you would like it.

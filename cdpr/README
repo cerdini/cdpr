@@ -1,0 +1,41 @@
+cdpr - Cisco Discovery Protocol Reporter
+Copyright (c) 2002 MonkeyMental.com
+
+Version 1.0.0
+
+I originally wrote this program to report which switch, and port a machine
+is connected to. In a large environment sometimes it is difficult to determine
+which port on which switch a machine is connected to.
+
+By default (with no command line options) cdpr will determine a network interface
+to open, put into promiscuous mode and wait for a single CDP packet to be received.
+
+On multi-homed machines, you can specify which interface to use with the -d option.
+
+Example (to determine which switch/port eth1 is connected to):
+	cdpr -d eth1
+
+You can dump the whole cdp packet using -v (more v's = more output).
+
+Sample Output:
+cdpr - Cisco Discovery Protocol Reporter Version 1.0.0
+Copyright (c) 2002 - MonkeyMental.com
+
+Using Device: eth0
+Waiting for CDP advertisement, default config is to transmit CDP packets every 60 seconds
+Device ID
+  value:  mtview-3548-access-1.i2.com
+Addresses
+  value:  10.100.230.14
+Port ID
+  value:  FastEthernet0/4
+
+As you can see above, by default CDP packets are broadcast every 60 seconds, cdpr will wait
+until a CDP packet is received. 
+
+I hope you find this utility useful. Thanks to Manfred Siemsen for helping to decode the 
+packet data.
+
+Regards,
+Lance O'Connor
+lance@monkeymental.com
