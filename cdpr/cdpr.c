@@ -62,7 +62,7 @@
 int cdprs=0;
 
 void
-dump_ip (const u_char *ip, int len)
+dump_ip (const u_char *ip)
 {
 	char switch_ip[100];
 	if(cdprs>=1)
@@ -124,7 +124,7 @@ get_cdp_type (int type)
 }
 
 void
-print_cdp_address (u_char *v, int vlen, int verbose)
+print_cdp_address (u_char *v, int verbose)
 {
 	u_int32_t i;
 	u_int32_t number;
@@ -167,7 +167,7 @@ print_cdp_address (u_char *v, int vlen, int verbose)
 			printf ("  value:  ");
 		}
 		if (protocol_len == 1 && *protocol_val == 0xCC && address_len == 4)
-			dump_ip (address_val, address_len);
+			dump_ip (address_val);
 		else
 			dump_hex (address_val, address_len);
 		printf ("\n");
@@ -177,7 +177,7 @@ print_cdp_address (u_char *v, int vlen, int verbose)
 }
 
 void
-print_cdp_capabilities (u_char *v, int vlen)
+print_cdp_capabilities (u_char *v)
 {
 	u_int32_t cap;
 
@@ -195,7 +195,7 @@ print_cdp_capabilities (u_char *v, int vlen)
 }
 
 void
-print_cdp_packet (const u_char *p, int plen, int verbose)
+print_cdp_packet (const u_char *p, unsigned int plen, int verbose)
 {
 	CDP_HDR *h;
 	CDP_DATA *d;
@@ -245,7 +245,7 @@ print_cdp_packet (const u_char *p, int plen, int verbose)
 
 		case TYPE_ADDRESS:
 			printf ("%s\n", get_cdp_type (type));
-			print_cdp_address (v, vlen, verbose);
+			print_cdp_address (v, verbose);
 			break;
 
 		case TYPE_PORT_ID:
@@ -258,6 +258,7 @@ print_cdp_packet (const u_char *p, int plen, int verbose)
 				int portlen;
 				portval = urlencode(v, strlen(v), &portlen);
 				sprintf(port, "&port=%.*s", portlen, portval);
+				free(portval);
 				cdprs_action(CDPRS_DATA, port, verbose);
 			}
 			break;
@@ -266,7 +267,7 @@ print_cdp_packet (const u_char *p, int plen, int verbose)
 			if(verbose > 0)
 			{
 				printf ("%s\n", get_cdp_type (type));
-				print_cdp_capabilities (v, vlen);
+				print_cdp_capabilities (v);
 			}
 			break;
 

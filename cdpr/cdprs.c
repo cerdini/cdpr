@@ -34,6 +34,26 @@
 #endif
 #include "cdpr.h"
 
+#ifdef WIN32
+void
+win32_socket_init()
+{
+	WSADATA wsaData;
+
+	if(WSAStartup(MAKEWORD(1, 1), &wsaData) != 0)
+	{
+		puts("WSAStartup Failed");
+		exit(1);
+	}
+}
+
+void
+win32_socket_cleanup()
+{
+    WSACleanup();
+}
+#endif
+
 void
 cdprs_footer(void)
 {
@@ -134,7 +154,9 @@ send_update(char *ip, char *msg, int verbose)
 		printf("Sent %d of %d bytes\n", bytes_sent, msg_len);
 	}
 	
-	close(sockfd);
+	shutdown(sockfd,2);
+
+
 	
 	return 0;
 }
@@ -163,6 +185,9 @@ cdprs_action(int action, char *string, int verbose)
 				{
 					memset(msg, 0, 4096);
 					strcpy(msg, http_hdr);
+#ifdef WIN32
+					win32_socket_init();
+#endif
 					/* Get the IP and URL from the config file */
 					read_file(string);
 					init_done = 1;
@@ -184,6 +209,9 @@ cdprs_action(int action, char *string, int verbose)
 			send_update(ip,msg,verbose);
 			/* We have sent the msg to the server, free the mem used by msg */
 			free(msg);
+#ifdef WIN32
+			win32_socket_cleanup();
+#endif
 			break;
 		default:
 			/* No default action */
