@@ -16,8 +16,8 @@ LDFLAGS = -lpcap
 # Build for Solaris
 #LDFLAGS = -lsocket -lnsl -lpcap
 
-cdpr: cdpr.c cdprs.c conffile.c timeout.c cdp.h cdpr.h
-	gcc $(CFLAGS) cdpr.c cdprs.c conffile.c timeout.c  $(LDFLAGS) -o cdpr
+cdpr: cdpr.c cdprs.c conffile.c timeout.c pktcap.c cdp.h cdpr.h
+	gcc $(CFLAGS) cdpr.c cdprs.c conffile.c timeout.c pktcap.c $(LDFLAGS) -o cdpr
 
 clean:
 	rm -f cdpr

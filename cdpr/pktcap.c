@@ -1,6 +1,6 @@
 /*
 * cdpr - Cisco Discovery Protocol Reporter
-* Copyright <c) 2002 MonkeyMental.com
+* Copyright (c) 2002-2003 MonkeyMental.com
 *
 * This program will show you which Cisco device your machine is
 * connected to based on CDP packets received.
@@ -20,50 +20,26 @@
 * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-#ifndef CDPR_H
-#define CDPR_H
+#include "cdpr.h"
 
-/*
-** Includes
-*/
-#include "pcap.h"
-
-/*
-** Defines
-*/
-#define CDPRS_INIT 1
-#define CDPRS_SETIP 2
-#define CDPRS_DATA 3
-#define CDPRS_SEND 4
-
-struct singleton
+static void
+pkt_callback(u_char *userData, const struct pcap_pkthdr *h, const u_char *pkt)
 {
-	struct pcap_pkthdr *hdr;
-	const u_char *pkt;
-};
+	struct singleton *sp = (struct singleton *)userData;
+	*sp->hdr = *h;
+	sp->pkt = pkt;
+}
 
-/*
-** Global variables
-*/
-int timeout;
-int cdprs;
-pcap_t *handle;
+const u_char *
+pkt_next(pcap_t *p, struct pcap_pkthdr *h)
+{
+	struct singleton s;
 
-/*
-** Function Prototypes
-*/
-int	cdprs_action(int action, char *string, int verbose);
-void set_location(char *loc);
-void get_hostname(int nameoverride, char *name);
-void read_file(char *file);
-char * urlencode(char *s, int slen, int *new_len);
-int enable_timeout(void);
-int set_timeout(unsigned int seconds);
-const u_char * pkt_next(pcap_t *p, struct pcap_pkthdr *h);
-/*
-static void pkt_callback(u_char *userData, const struct pcap_pkthdr *h, const u_char *pkt);
-*/
+	s.hdr = h;
+	if (pcap_dispatch(p, 1, pkt_callback, (u_char*)&s) <= 0)
+	{
+		return (0);
+	}
+	return (s.pkt);
+}
 
-
-
-#endif

@@ -49,9 +49,12 @@
 * 2.0.1	LO	03-07-01	Add sys/types.h to the includes in conffile.c for BSD support
 * 2.0.2 LO	03-08-03	Enable timeouts so that cdpr won't wait forever looking for a packet
 * 2.0.3	LO	03-08-04	Better cleanup after aborting due to timeout. 
+* 2.0.4	LO	03-08-05	Timeout code that actually timesout. Set device to nonblocking
+*						mode and loop until packet or timeout. Before, pcap_next would
+*						block so the signal handler couldn't acutally exit.
 */
 
-#include "pcap.h"
+/*#include "pcap.h" */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -470,7 +473,7 @@ main(int argc, char *argv[])
 	bpf_u_int32 net;
 	struct pcap_pkthdr header;
 	const u_char *packet;
-	char version[] = "2.0.3";
+	char version[] = "2.0.4";
 
 	int c;
 	int verbose=0;
@@ -579,7 +582,7 @@ main(int argc, char *argv[])
 	pcap_lookupnet(dev, &net, &mask, errbuf);
 
 	/* Open the pcap device */
-	if((handle = pcap_open_live(dev, BUFSIZ, 1, 1, errbuf)) == NULL)
+	if((handle = pcap_open_live(dev, BUFSIZ, 1, 0, errbuf)) == NULL)
 	{
 		printf("Error opening device (%s)\n", errbuf);
 		exit(1);
@@ -609,17 +612,19 @@ main(int argc, char *argv[])
 			set_timeout(seconds);
 		}
 	}
+	/* Set non-blocking mode */
+	if(pcap_setnonblock(handle, 1, errbuf))
+	{
+		pcap_perror(handle, NULL);
+	}
+
 	/* Get the next packet that comes in, we only need one */
 	printf("Waiting for CDP advertisement:\n");
 	printf("(default config is to transmit CDP packets every 60 seconds)\n");
 	do
 	{
-		packet = pcap_next(handle, &header);
-		if(timeout)
-		{
-			break;
-		}
-	} while (!packet);
+		packet = pkt_next(handle, &header);
+	} while ((!packet) && (!timeout));
 
 	/*
 	** sigalarm received. clean up and exit
