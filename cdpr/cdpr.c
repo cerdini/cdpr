@@ -27,6 +27,8 @@
 * 1.0.3 LO	02-07-03	loop on pcap_next until a valid packet is received.
 *						(patch provided Martin Buck <martin.buck@ascom.ch>)
 * 1.0.4	LO	02-07-10	Added 1ms timeout to pcap_open_live to fix *BSD
+* 1.0.5	LO	02-07-14	Copy packet data to local struct to resolve Bus Errors
+*						on Sun machines.
 */
 
 #include <pcap.h>
@@ -96,7 +98,10 @@ void
 print_cdp_address (u_char *v, int vlen, int verbose)
 {
 	int i;
-	u_int32_t number = ntohl (*((u_int32_t *) v));
+	u_int32_t number;
+
+	memcpy (&number, v, sizeof (number));
+        number = ntohl (number);
 
 	if (verbose > 0)
 	{
@@ -140,7 +145,10 @@ print_cdp_address (u_char *v, int vlen, int verbose)
 void
 print_cdp_capabilities (u_char *v, int vlen)
 {
-	u_int32_t cap = ntohl (*((u_int32_t *) v));
+	u_int32_t cap;
+
+	memcpy (&cap, v, sizeof (cap));
+        cap = ntohl (cap);
 
 	printf ("  value:  %08x\n", cap);
 	if (cap & 0x01) printf ("          Performs level 3 routing for at least one network layer protocol.\n");
@@ -175,26 +183,29 @@ print_cdp_packet (const u_char *p, int plen, int verbose)
 
 	while (plen > sizeof (CDP_DATA))
 	{
-		int type = ntohs (d->type);
-		int length = ntohs (d->length);
-		u_char *v = (u_char *) d + sizeof (CDP_DATA);
-		int vlen = length - sizeof (CDP_DATA);
-		
+		int type;
+		int length;
+		u_char *v;  /* variable data */
+		int vlen;   /* length of variable data */
+		CDP_DATA data;
 
-		//	printf ("\ncdp type/len/val:\n");
+		memcpy (&data, d, sizeof (CDP_DATA));
+		type = ntohs (data.type);
+		length = ntohs (data.length);
+		v = (u_char *) d + sizeof (CDP_DATA);
+		vlen = length - sizeof (CDP_DATA);
+	
 		if(verbose > 0 )
 		{
+                        printf ("\ncdp type/len/val:\n");
 			printf ("  type:   %04x - %s\n", type, get_cdp_type (type));
-		}
-		if(verbose > 0)
-		{
 			printf ("  length: %04x\n", length);
 		}
 		switch (type)
 		{
 		case TYPE_DEVICE_ID:
 			printf ("%s\n", get_cdp_type (type));
-		    printf ("  value:  %.*s\n", vlen, v);
+		        printf ("  value:  %.*s\n", vlen, v);
 			break;
 
 		case TYPE_ADDRESS:
@@ -396,7 +407,7 @@ main(int argc, char *argv[])
 	bpf_u_int32 net;
 	struct pcap_pkthdr header;
 	const u_char *packet;
-	char version[] = "1.0.4";
+	char version[] = "1.0.5";
 
 	int c,sd=0,verbose=0;
 

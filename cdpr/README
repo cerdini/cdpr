@@ -1,7 +1,50 @@
 cdpr - Cisco Discovery Protocol Reporter
 Copyright (c) 2002 MonkeyMental.com
 
-Version 1.0.4
+*Version 1.0.5
+
+Copy packet data to local variable to resolve alignment issues that caused Bus Errors
+on some architectures. cdpr has now been compiled and tested on the following
+Operating Systems:
+ - Linux 2.4.18 (x86)
+ - FreeBSD 4.6 (x86)
+ - Sun Solaris 8 (SPARC)
+ - HP HP-UX 11.11 (PA-Risc)
+ - IBM AIX 4.3.3 (PowerPC)
+
+On some operating systems (like Solaris) the u_int* typedefs are not defined, to resolve
+this issue, include u_ints.h in cdp.h.
+
+On AIX you must load the dlpi kernel module using the following command:
+
+ strload -f /etc/dlpi.conf
+
+On AIX you may recieve some warnings about "Primitive issued in improper state", 
+these can be safely ignored.
+
+On HP-UX you may recieve a warning about "any missing unit number", this can be
+safely ignored
+
+*Version 1.0.4
+
+Added 1 ms timeout to pcap_open_live to fix BSD hang issues.
+
+*Version 1.0.3
+
+Loop on pcap_next until a valid packet is received, some implementations of pcap will
+return a null. Patch provided by Martin Buck <martin.buck@ascom.ch>.
+
+*Version 1.0.2
+
+Use a new filter to better identify CDP packets. Solves the majority of the segfaults
+due to trying to decode a non-CDP packet (i.e. a VTP packet)
+
+*Version 1.0.1
+
+Add preprocessor macros to only include the Link Type defines provided by the pcap and
+bpf headers. 
+
+*Version 1.0.0
 
 I originally wrote this program to report which switch, and port a machine
 is connected to. In a large environment sometimes it is difficult to determine
