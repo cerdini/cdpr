@@ -29,8 +29,8 @@
 void
 timeout_recvd(int signum)
 {
-	printf("Timeout received. (signal: %d)\n", signum);
-	exit(1);
+//	printf("Timeout received. (signal: %d)\n", signum);
+	timeout = signum;
 }
 
 int

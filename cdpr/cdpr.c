@@ -48,6 +48,7 @@
 * 2.0.0	LO	03-06-25	Release - Major revision change due to server reporting code
 * 2.0.1	LO	03-07-01	Add sys/types.h to the includes in conffile.c for BSD support
 * 2.0.2 LO	03-08-03	Enable timeouts so that cdpr won't wait forever looking for a packet
+* 2.0.3	LO	03-08-04	Better cleanup after aborting due to timeout. 
 */
 
 #include "pcap.h"
@@ -64,8 +65,6 @@
 #endif
 #include "cdp.h"
 #include "cdpr.h"
-
-int cdprs=0;
 
 void
 dump_ip (const u_char *ip)
@@ -437,7 +436,7 @@ usage(void)
 {
 	puts("d: Specify device to use (eth0, hme0, etc.)");
 	puts("h: Print this usage");
-	puts("t: time in seconds to abort waiting for a packet");
+	puts("t: time in seconds to abort waiting for a packet (should be > 60)");
 	puts("v[vv]: Set verbose mode");
 	puts("\n** Options dealing with server updates: **");
 	puts(" u: Send cdpr information to a cdpr server\n    requires config file as arg");
@@ -471,7 +470,7 @@ main(int argc, char *argv[])
 	bpf_u_int32 net;
 	struct pcap_pkthdr header;
 	const u_char *packet;
-	char version[] = "2.0.2";
+	char version[] = "2.0.3";
 
 	int c;
 	int verbose=0;
@@ -480,6 +479,9 @@ main(int argc, char *argv[])
 	int settimeout=0;
 	unsigned int seconds=0;
 
+	/* Zero out some global variables */
+	timeout=0;
+	cdprs=0;
 	memset (errbuf, 0, sizeof (errbuf));
 
 	/* Print out header */
@@ -499,6 +501,7 @@ main(int argc, char *argv[])
 			case 't':
 				seconds = atoi(optarg);
 				settimeout = 1;
+				printf("Timeout enabled for %u seconds\n", seconds);
 				break;
 			case 'u':
 				conf = optarg;
@@ -612,7 +615,24 @@ main(int argc, char *argv[])
 	do
 	{
 		packet = pcap_next(handle, &header);
+		if(timeout)
+		{
+			break;
+		}
 	} while (!packet);
+
+	/*
+	** sigalarm received. clean up and exit
+	*/
+	if(timeout)
+	{
+		puts("Aborting due to timeout");
+		pcap_close(handle);
+		return(2);
+	}
+
+	/* Got a packet, disable the alarm */
+	set_timeout(0);
 
 	/* Print its length */
 	if(verbose > 0)

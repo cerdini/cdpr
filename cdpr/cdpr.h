@@ -20,12 +20,19 @@
 * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
+#ifndef CDPR_H
+#define CDPR_H
 
 #define CDPRS_INIT 1
 #define CDPRS_SETIP 2
 #define CDPRS_DATA 3
 #define CDPRS_SEND 4
 
+/*
+** Global variables
+*/
+int timeout;
+int cdprs;
 
 int	cdprs_action(int action, char *string, int verbose);
 void set_location(char *loc);
@@ -34,3 +41,5 @@ void read_file(char *file);
 char * urlencode(char *s, int slen, int *new_len);
 int enable_timeout(void);
 int set_timeout(unsigned int seconds);
+
+#endif
