@@ -26,6 +26,7 @@
 * 1.0.2 LO	02-07-02	New filter to better identify CDP packets
 * 1.0.3 LO	02-07-03	loop on pcap_next until a valid packet is received.
 *						(patch provided Martin Buck <martin.buck@ascom.ch>)
+* 1.0.4	LO	02-07-10	Added 1ms timeout to pcap_open_live to fix *BSD
 */
 
 #include <pcap.h>
@@ -395,7 +396,7 @@ main(int argc, char *argv[])
 	bpf_u_int32 net;
 	struct pcap_pkthdr header;
 	const u_char *packet;
-	char version[] = "1.0.3";
+	char version[] = "1.0.4";
 
 	int c,sd=0,verbose=0;
 
@@ -437,7 +438,7 @@ main(int argc, char *argv[])
 	pcap_lookupnet(dev, &net, &mask, errbuf);
 
 	/* Open the pcap device */
-	if((handle = pcap_open_live(dev, BUFSIZ, 1, 0, errbuf)) == NULL)
+	if((handle = pcap_open_live(dev, BUFSIZ, 1, 1, errbuf)) == NULL)
 	{
 		printf("Error opening device (%s)\n", errbuf);
 		exit(1);

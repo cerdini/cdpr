@@ -1,7 +1,7 @@
 cdpr - Cisco Discovery Protocol Reporter
 Copyright (c) 2002 MonkeyMental.com
 
-Version 1.0.0
+Version 1.0.4
 
 I originally wrote this program to report which switch, and port a machine
 is connected to. In a large environment sometimes it is difficult to determine
