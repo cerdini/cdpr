@@ -3,7 +3,7 @@
 #CFLAGS=-Wall -ggdb -lpcap -I/usr/include/pcap
 
 # Standard build with pcap installed on the system
-CFLAGS = -Wall -ggdb
+CFLAGS = -Wall -ggdb -DCDPRS
 
 # Standard build with pcap installed on the system include CDPRS options
 #CFLAGS = -Wall -ggdb -DCDPRS
@@ -19,8 +19,8 @@ LDFLAGS = -lpcap
 # Build for Solaris
 #LDFLAGS = -lsocket -lnsl -lpcap
 
-cdpr: cdpr.c cdp.h
-	gcc $(CFLAGS) cdpr.c $(LDFLAGS) -o cdpr
+cdpr: cdpr.c cdprs.c conffile.c cdp.h cdpr.h
+	gcc $(CFLAGS) cdpr.c cdprs.c conffile.c  $(LDFLAGS) -o cdpr
 
 clean:
 	rm -f cdpr

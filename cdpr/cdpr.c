@@ -31,30 +31,23 @@
 *						on Sun machines.
 * 1.0.6	LO	02-07-15	More alignment fixes.
 * 1.0.7	LO	02-10-29	Port to Win32, autodetection and list generation of
-*						PCAP capable devices.
+*				PCAP capable devices.
 * 1.0.8	LO	03-02-13	Port to arm processor (Zaurus) using a filter specific
-* 						to arm processors to work around pcap bug
-* 1.1.0 LO	03-04-23	Add -u switch to send updates to a servers using HTTP GET
-*						requests.
+* 				to arm processors to work around pcap bug
 */
 
 #include "pcap.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#ifndef WIN32
 #ifdef CDPRS
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #endif
-#endif
 #ifdef WIN32
 #include "xgetopt.h"
-#ifdef CDPRS
-#include <winsock.h>
-#endif
 #else
 #include <unistd.h>
 #endif
@@ -62,18 +55,20 @@
 #include "u_ints.h"
 #endif
 #include "cdp.h"
+#include "cdpr.h"
 
 #ifdef CDPRS
-char *msg;
 int cdprs=0;
 
-void
+/*void
 cdprs_header(void)
 {
 	char *header="GET /mt3k/php/cdprs.php?switch_ip=";
 	strcat(msg,header);
 }
+*/
 
+/*
 char *
 urlize(char *buf)
 {
@@ -98,14 +93,19 @@ urlize(char *buf)
 	*cp = 0;
 	return new;
 }
+*/
 
+/*
 void
 cdprs_footer(void)
 {
 	char *footer=" HTTP/1.0\r\n\r\n";
+	cdprs_action(CDPRS_DATA, footer,0);
 	strcat(msg,footer);
 }
+*/
 
+/*
 void
 get_hostname(void)
 {
@@ -114,27 +114,20 @@ get_hostname(void)
 
 	gethostname(uname, sizeof(uname));
 
+	cdprs_action(CDPRS_DATA, hheader, 0);
+	cdprs_action(CDPRS_DATA, uname, 0);
 	strcat(msg,hheader);
 	strcat(msg,uname);
 }
+*/
 
+/*
 int
 send_update(int verbose)
 {
     int sockfd, msg_len, bytes_sent;
-#ifdef WIN32
-	WSADATA wsaData;
-#endif
 	struct sockaddr_in cdprs_addr;
 
-
-#ifdef WIN32
-	if(WSAStartup(MAKEWORD(1,1), &wsaData) != 0)
-	{
-		printf("WSAStartup faild\n");
-		exit(1);
-	}
-#endif
 	get_hostname();
 	cdprs_footer();
 	sockfd=socket(AF_INET, SOCK_STREAM, 0);
@@ -162,18 +155,20 @@ send_update(int verbose)
 
 	return 0;
 }
+*/
 #endif
 
 void
 dump_ip (const u_char *ip, int len)
 {
 #ifdef CDPRS
-	char switch_ip[50];
+	char *switch_ip;
 	if(cdprs==1)
 	{
-		sprintf (switch_ip, "%d.%d.%d.%d",
+		sprintf (switch_ip, "switch_ip=%d.%d.%d.%d",
 			(int) ip[0], (int) ip[1], (int) ip[2], (int) ip[3]);
-		strcat(msg,switch_ip);
+		cdprs_action(CDPRS_DATA, switch_ip, 0);
+//		strcat(msg,switch_ip);
 	}
 #endif
 	printf ("%d.%d.%d.%d",
@@ -361,10 +356,10 @@ print_cdp_packet (const u_char *p, int plen, int verbose)
 				char port[1024];
 				char *portval;
 				int portlen;
-				portval = urlize(v);
-				portlen=strlen(portval);
+				portval = urlencode(v, strlen(v), &portlen);
 				sprintf(port, "&port=%.*s", portlen, portval);
-				strcat(msg,port);
+				cdprs_action(CDPRS_DATA, port, verbose);
+//				strcat(msg,port);
 			}
 			break;
 
@@ -547,6 +542,8 @@ main(int argc, char *argv[])
 {
 	pcap_t *handle;
 	char *dev = NULL;
+	char *conf = NULL;
+	char *loc = NULL;
 	char errbuf[PCAP_ERRBUF_SIZE];
 	struct bpf_program filter;
 	/*
@@ -567,19 +564,7 @@ main(int argc, char *argv[])
 
 	int c;
 	int verbose=0;
-
-#ifdef CDPRS
-	msg=malloc(4096);
-	if(msg==NULL)
-	{
-		printf("malloc failed - aborting\n");
-		return 2;
-	}
-	else
-	{
-		memset(msg, 0, sizeof(msg));
-	}
-#endif
+	int locdetail=0;
 
 	memset (errbuf, 0, sizeof (errbuf));
 
@@ -588,7 +573,7 @@ main(int argc, char *argv[])
 	printf("Copyright (c) 2002-2003 - MonkeyMental.com\n\n");
 
 	/* Check command-line options */
-	while((c = getopt(argc, argv, "d:vuh")) !=EOF)
+	while((c = getopt(argc, argv, "d:vu:l:h")) !=EOF)
 		switch(c)
 		{
 			case 'd':
@@ -598,8 +583,14 @@ main(int argc, char *argv[])
 				verbose++;
 				break;
 			case 'u':
+				conf = optarg;
 				cdprs = 1;
-				cdprs_header();
+				cdprs_action(CDPRS_INIT, conf, 0);
+				//cdprs_header();
+				break;
+			case 'l':
+				loc = optarg;
+				locdetail = 1;
 				break;
 			case 'h':
 			case '?':
@@ -706,7 +697,12 @@ main(int argc, char *argv[])
 	pcap_close(handle);
 	if(cdprs >=1)
 	{
-		send_update(verbose);
+		if(locdetail >=1)
+		{
+			set_location(loc);
+//			cdprs_action(CDPRS_DATA, loc,0);
+		}
+		cdprs_action(CDPRS_SEND, "", 0);
 	}
 	return(0);
 }
