@@ -8,6 +8,7 @@
 #include "sys/socket.h"
 #include "netinet/in.h"
 #include "arpa/inet.h"
+#include "netdb.h"
 #endif
 
 int
@@ -27,7 +28,7 @@ is_ip (char *cp)
 void
 do_something_with (char *ip, char *url)
 {
-	// Print out ip and url
+	struct hostent *h;
 
 	if (ip && url)
 	{
@@ -42,6 +43,20 @@ do_something_with (char *ip, char *url)
 		else
 		{
 /*			printf ("hostname = \"%s\", url = \"%s\"\n", ip, url); */
+			/* Get the IP of the hostname */
+			if((h=gethostbyname(ip)) == NULL)
+			{
+				herror("gethostbyname");
+				exit(1);
+			}
+			else
+			{
+				cdprs_action(CDPRS_SETIP, inet_ntoa(*((struct in_addr *)h->h_addr)), 1);
+				cdprs_action(CDPRS_DATA, url, 1);
+				/* Add the ? to the end of the url */
+				cdprs_action(CDPRS_DATA, "?", 1);
+			}
+
 		}
 	}
 }

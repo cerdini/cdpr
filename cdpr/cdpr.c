@@ -31,21 +31,23 @@
 *						on Sun machines.
 * 1.0.6	LO	02-07-15	More alignment fixes.
 * 1.0.7	LO	02-10-29	Port to Win32, autodetection and list generation of
-*				PCAP capable devices.
+*						PCAP capable devices.
 * 1.0.8	LO	03-02-13	Port to arm processor (Zaurus) using a filter specific
-* 				to arm processors to work around pcap bug
+* 						to arm processors to work around pcap bug
+* 1.1.0	LO	03-04-25	Add central server reporting code
+* 1.1.1	LO	03-04-26	Fix compile errors for Win32 on server code
+* 1.1.2	LO	03-04-27	Add config file support
+* 1.1.3	LO	03-04-28	Add location/description flag for extended info on server
+*						Split server code and conf file code into seperate source files
+*						Cleanup old server/config file code. Remove cond. compile for CDPRS
+*						Create cdpr.h for ext. functions and common defines.
+*						Add DNS support to the config file so you can specify a hostname
 */
 
 #include "pcap.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#ifdef CDPRS
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#endif
 #ifdef WIN32
 #include "xgetopt.h"
 #else
@@ -57,120 +59,18 @@
 #include "cdp.h"
 #include "cdpr.h"
 
-#ifdef CDPRS
 int cdprs=0;
-
-/*void
-cdprs_header(void)
-{
-	char *header="GET /mt3k/php/cdprs.php?switch_ip=";
-	strcat(msg,header);
-}
-*/
-
-/*
-char *
-urlize(char *buf)
-{
-	char *cp;
-	static char new[8192];
-
-	cp=new;
-
-	while(*buf !=0)
-	{
-		switch(*buf)
-		{
-			case '/':
-				*cp++ = '%';
-				*cp++ = '2';
-				*cp++ = 'F';
-				*buf++;
-				break;
-		}
-		*cp++ = *buf++;
-	}
-	*cp = 0;
-	return new;
-}
-*/
-
-/*
-void
-cdprs_footer(void)
-{
-	char *footer=" HTTP/1.0\r\n\r\n";
-	cdprs_action(CDPRS_DATA, footer,0);
-	strcat(msg,footer);
-}
-*/
-
-/*
-void
-get_hostname(void)
-{
-	char uname[256];
-	char *hheader="&host=";
-
-	gethostname(uname, sizeof(uname));
-
-	cdprs_action(CDPRS_DATA, hheader, 0);
-	cdprs_action(CDPRS_DATA, uname, 0);
-	strcat(msg,hheader);
-	strcat(msg,uname);
-}
-*/
-
-/*
-int
-send_update(int verbose)
-{
-    int sockfd, msg_len, bytes_sent;
-	struct sockaddr_in cdprs_addr;
-
-	get_hostname();
-	cdprs_footer();
-	sockfd=socket(AF_INET, SOCK_STREAM, 0);
-
-	cdprs_addr.sin_family = AF_INET;
-	cdprs_addr.sin_port = htons(80);
-	cdprs_addr.sin_addr.s_addr = inet_addr("10.100.26.9");
-	memset(&(cdprs_addr.sin_zero), '\0', 8);
-
-	if(verbose >=2)
-	{
-		printf("Message: %s\n", msg);
-	}
-	connect(sockfd, (struct sockaddr *)&cdprs_addr, sizeof(struct sockaddr));
-		
-	msg_len = strlen(msg);
-	bytes_sent = send(sockfd, msg, msg_len, 0);
-	
-	if(verbose >=2)
-	{
-		printf("Sent %d of %d bytes\n", bytes_sent, msg_len);
-	}
-	
-	close(sockfd);
-
-	return 0;
-}
-*/
-#endif
 
 void
 dump_ip (const u_char *ip, int len)
 {
-#ifdef CDPRS
 	char *switch_ip;
 	if(cdprs==1)
 	{
 		sprintf (switch_ip, "switch_ip=%d.%d.%d.%d",
 			(int) ip[0], (int) ip[1], (int) ip[2], (int) ip[3]);
 		cdprs_action(CDPRS_DATA, switch_ip, 0);
-//		strcat(msg,switch_ip);
 	}
-#endif
 	printf ("%d.%d.%d.%d",
 		(int) ip[0], (int) ip[1], (int) ip[2], (int) ip[3]);
 }
@@ -359,7 +259,6 @@ print_cdp_packet (const u_char *p, int plen, int verbose)
 				portval = urlencode(v, strlen(v), &portlen);
 				sprintf(port, "&port=%.*s", portlen, portval);
 				cdprs_action(CDPRS_DATA, port, verbose);
-//				strcat(msg,port);
 			}
 			break;
 
@@ -531,7 +430,8 @@ usage(void)
 {
 	puts("d: Specify device to use (eth0, hme0, etc.)");
 	puts("v[vv]: Set verbose mode");
-	puts("u: Send cdpr information to a cdpr server");
+	puts("u: Send cdpr information to a cdpr server\n   requires config file as arg");
+	puts("l: location/description of this port");
 	puts("h: Print this usage");
 
 	exit(0);
@@ -560,7 +460,7 @@ main(int argc, char *argv[])
 	bpf_u_int32 net;
 	struct pcap_pkthdr header;
 	const u_char *packet;
-	char version[] = "1.1.0";
+	char version[] = "1.1.3";
 
 	int c;
 	int verbose=0;
@@ -586,7 +486,6 @@ main(int argc, char *argv[])
 				conf = optarg;
 				cdprs = 1;
 				cdprs_action(CDPRS_INIT, conf, 0);
-				//cdprs_header();
 				break;
 			case 'l':
 				loc = optarg;
@@ -700,7 +599,6 @@ main(int argc, char *argv[])
 		if(locdetail >=1)
 		{
 			set_location(loc);
-//			cdprs_action(CDPRS_DATA, loc,0);
 		}
 		cdprs_action(CDPRS_SEND, "", 0);
 	}

@@ -109,14 +109,11 @@ send_update(char *ip, char *msg, int verbose)
 	int sockfd, msg_len, bytes_sent;
 	struct sockaddr_in cdprs_addr;
 	
-/*	get_hostname();
-**	cdprs_footer();
-*/
 	sockfd=socket(AF_INET, SOCK_STREAM, 0);
 	
 	cdprs_addr.sin_family = AF_INET;
 	cdprs_addr.sin_port = htons(80);
-	cdprs_addr.sin_addr.s_addr = inet_addr("10.100.26.9");
+	cdprs_addr.sin_addr.s_addr = inet_addr(ip);
 	memset(&(cdprs_addr.sin_zero), '\0', 8);
 	
 	if(verbose >=2)
@@ -181,6 +178,8 @@ cdprs_action(int action, char *string, int url_encode)
 			get_hostname();
 			cdprs_footer();
 			send_update(ip,msg,url_encode);
+			/* We have sent the msg to the server, free the mem used by msg */
+			free(msg);
 			break;
 		default:
 			/* No default action */
