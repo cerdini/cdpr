@@ -80,10 +80,14 @@ get_hostname(void)
 void
 set_location(char *loc)
 {
-	char location[500];
-	int loc_len;
-
-	sprintf(location, "&loc=%s", urlencode(loc, strlen(loc), &loc_len));
+	char location[500]={0};
+	int loc_len = 0;
+	char *url = urlencode (loc, strlen (loc), &loc_len);
+	if (url)
+    {
+        sprintf(location, "&loc=%s", url);
+        free (url);
+    }
 	cdprs_action(CDPRS_DATA, location, 0);
 }
 
