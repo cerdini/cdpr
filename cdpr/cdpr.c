@@ -42,6 +42,8 @@
 *						Cleanup old server/config file code. Remove cond. compile for CDPRS
 *						Create cdpr.h for ext. functions and common defines.
 *						Add DNS support to the config file so you can specify a hostname
+* 1.1.4	LO	03-06-20	Added -n flag to override hostname sent to server. Added error
+*						checking to the socket code.
 */
 
 #include "pcap.h"
@@ -447,6 +449,7 @@ main(int argc, char *argv[])
 	char *conf = NULL;
 	char *loc = NULL;
 	char *name = NULL;
+	char uname[256];
 	char errbuf[PCAP_ERRBUF_SIZE];
 	struct bpf_program filter;
 	/*
@@ -463,7 +466,7 @@ main(int argc, char *argv[])
 	bpf_u_int32 net;
 	struct pcap_pkthdr header;
 	const u_char *packet;
-	char version[] = "1.1.3";
+	char version[] = "1.1.4";
 
 	int c;
 	int verbose=0;
@@ -604,18 +607,20 @@ main(int argc, char *argv[])
 	pcap_close(handle);
 	if(cdprs >=1)
 	{
+		memset(uname, 0, 256);
 		if(locdetail >=1)
 		{
 			set_location(loc);
+			get_hostname(0, NULL);
 		}
 		if(nameoverride >= 1)
 		{
-			get_hostname(name);
+/*			memset(uname, 0, 256);
+**			strcpy(uname, name);
+*/
+			get_hostname(nameoverride, name);
 		}
-		else
-		{
-			get_hostname(NULL);
-		}
+
 		cdprs_action(CDPRS_SEND, "", verbose);
 	}
 	return(0);

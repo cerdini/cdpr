@@ -63,21 +63,23 @@ cdprs_footer(void)
 }
 
 void
-get_hostname(char uname[256])
+get_hostname(int nameoverride, char *name)
 {
-//	char uname[256];
 	char *hheader="&host=";
 
-	if(uname == NULL)
+	cdprs_action(CDPRS_DATA, hheader, 0);
+
+	if(!nameoverride)
 	{
+		char uname[256];
 		gethostname(uname, sizeof(uname));
+		cdprs_action(CDPRS_DATA, uname, 0);
+	}
+	else
+	{
+		cdprs_action(CDPRS_DATA, name, 0);
 	}
 		
-	cdprs_action(CDPRS_DATA, hheader, 0);
-	cdprs_action(CDPRS_DATA, uname, 0);
-/*  strcat(msg,hheader);
-**  strcat(msg,uname);
-*/
 }
 
 void
