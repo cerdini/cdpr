@@ -58,6 +58,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
+#include <unistd.h>
 #ifdef WIN32
 #include "xgetopt.h"
 #else
@@ -479,11 +481,12 @@ main(int argc, char *argv[])
 	int verbose=0;
 	int locdetail=0;
 	int nameoverride=0;
-	int settimeout=0;
+//	int settimeout=0;
 	unsigned int seconds=0;
+	time_t start_time=0;
 
 	/* Zero out some global variables */
-	timeout=0;
+	timeout=1;
 	cdprs=0;
 	memset (errbuf, 0, sizeof (errbuf));
 
@@ -503,7 +506,7 @@ main(int argc, char *argv[])
 				break;
 			case 't':
 				seconds = atoi(optarg);
-				settimeout = 1;
+//				settimeout = 1;
 				printf("Timeout enabled for %u seconds\n", seconds);
 				break;
 			case 'u':
@@ -600,6 +603,7 @@ main(int argc, char *argv[])
 	pcap_freecode(&filter);
 
 	/* If timeout is enabled, enable the timeout handler and set timeout */
+	/*
 	if(settimeout > 0)
 	{
 		if(enable_timeout() != 0)
@@ -612,6 +616,7 @@ main(int argc, char *argv[])
 			set_timeout(seconds);
 		}
 	}
+	*/
 	/* Set non-blocking mode */
 	if(pcap_setnonblock(handle, 1, errbuf))
 	{
@@ -621,15 +626,19 @@ main(int argc, char *argv[])
 	/* Get the next packet that comes in, we only need one */
 	printf("Waiting for CDP advertisement:\n");
 	printf("(default config is to transmit CDP packets every 60 seconds)\n");
+
+	/* Get current time to check for timeout */
+	start_time = time(NULL);
 	do
 	{
 		packet = pkt_next(handle, &header);
-	} while ((!packet) && (!timeout));
+		usleep(10000);
+	} while ((!packet) && ( timeout=((start_time+seconds) > (unsigned int)time(NULL))) );
 
 	/*
 	** sigalarm received. clean up and exit
 	*/
-	if(timeout)
+	if(timeout == 0)
 	{
 		puts("Aborting due to timeout");
 		pcap_close(handle);
@@ -637,7 +646,7 @@ main(int argc, char *argv[])
 	}
 
 	/* Got a packet, disable the alarm */
-	set_timeout(0);
+//	set_timeout(0);
 
 	/* Print its length */
 	if(verbose > 0)
