@@ -1,0 +1,52 @@
+Version 2.0.0 of cdpr now supports transmiting the data decoded to a server.
+
+In lieu of writing my own cdpr server, I decided that I would send the data to
+a web server using a GET request. This has several advantages:
+
+ - I didn't have to write a server
+ - You can have your webserver do whatever you want with the data
+ 	- Put it in a database
+ 	- Log it to a text file
+ 	- etc.
+ - You can write your server piece in the language of your choice (PHP, ASP, Perl, C, etc.)
+   as it's just a standard HTTP GET request.
+
+*Details on the config file
+
+The config file should contain one line that has the host to connect to and the relative URL
+to request. For example:
+
+	[cdpr.conf]
+	cdpr_svr.monkeymental.com	/cdprs.php
+	<EOF>
+
+This will instruct cdpr to connect to the machine cdpr_svr.monkeymental.com and request the URL
+/cdprs/cpdrs.php. This would be the same as http://cdpr_svr.monkeymental.com/cdprs/cdprs.php in
+a web browser. The server and the URL should be seperated by a whitespace character (i.e. a [Tab])
+
+*Details on the GET request:
+
+cdpr will execute the following query to port 80 of the server in the config file:
+
+GET /cdprs.php?switch_ip=10.100.248.15&port=4%2F3&loc=test&host=mvislnx HTTP/1.0
+
+The request will have the following variables assosciated with it:
+
+switch_ip:	The IP address of the switch the machine running cdpr is connected to.
+port:		The port that the machine running cdpr is connected to.
+loc:		The optional location identifier passed on the command line using -l
+host:		The hostname of the machine running cdpr (or whatever is passed on the command
+			line if using the hostname override option -n)
+
+How you access this data depends on what language you are writing your scripts in. If you were
+using PHP, you could access them with $_GET["variable"] (i.e. $_GET["switch_ip"]) Once you have
+the data in your web page/cgi script, you can do with it as you wish, such as store it in a text
+file, Populate a SQL database, etc.
+
+*Notes:
+
+A few things to note about the CDPR Server functionallity:
+
+	- Any output from the webserver is ignored
+	- Only one attempt is made to send the data
+	- Port and location are urlencoded to handle any "odd" characters (like a /)

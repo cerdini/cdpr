@@ -1,6 +1,24 @@
 cdpr - Cisco Discovery Protocol Reporter
 Copyright (c) 2002-2003 MonkeyMental.com
 
+*Version 2.0.0
+
+This version provides the functionallity to report CDP data back to a centralized server.
+Please see the file README.cdprs for details, but in general, the following command line
+options have been added:
+
+-u conf.file: Send updates to the host listed in the config file.
+-l location: Send a location string to help identify the port.
+-n hostname: Override the hostname sent to the server.
+
+Platform Update: Some of the newer HP Switch firmware will broadcast CDP packets. cdpr
+will decode these packets just the same as they would if they came from a Cisco product.
+It was tested on a HP ProCurve 4000M running revision C.09.16.
+
+*Version 1.0.8
+
+Support for ARM processor. Tested on the Sharp Zaurus SL-5500.
+
 *Version 1.0.7
 
 Support for Win32 clients please read README.Win32.

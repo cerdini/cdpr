@@ -44,7 +44,8 @@
 *						Add DNS support to the config file so you can specify a hostname
 * 1.1.4	LO	03-06-20	Added -n flag to override hostname sent to server. Added error
 *						checking to the socket code.
-* 1.1.5	LO	03-05-23	Fix bug where hostname would not be transmitted w/o location set
+* 1.1.5	LO	03-06-23	Fix bug where hostname would not be transmitted w/o location set
+* 2.0.0	LO	03-06-25	Release - Major revision change due to server reporting code
 */
 
 #include "pcap.h"
@@ -467,7 +468,7 @@ main(int argc, char *argv[])
 	bpf_u_int32 net;
 	struct pcap_pkthdr header;
 	const u_char *packet;
-	char version[] = "1.1.5";
+	char version[] = "2.0.0";
 
 	int c;
 	int verbose=0;
