@@ -216,7 +216,10 @@ cdprs_action(int action, char *string, int verbose)
 					win32_socket_init();
 #endif
 					/* Get the IP and URL from the config file */
-					read_file(string);
+					if(strlen(string))
+					{
+						read_file(string);
+					}
 					init_done = 1;
 				}
 			}

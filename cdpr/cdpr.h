@@ -47,6 +47,7 @@ struct singleton
 */
 int timeout;
 int cdprs;
+int cdprs_cmdline;
 pcap_t *handle;
 
 /*
@@ -60,10 +61,7 @@ char * urlencode(char *s, int slen, int *new_len);
 int enable_timeout(void);
 int set_timeout(unsigned int seconds);
 const u_char * pkt_next(pcap_t *p, struct pcap_pkthdr *h);
-/*
-static void pkt_callback(u_char *userData, const struct pcap_pkthdr *h, const u_char *pkt);
-*/
-
+void do_something_with(char *ip, char *url);
 
 
 #endif

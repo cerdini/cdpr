@@ -450,7 +450,9 @@ usage(void)
 	puts("\n** Options dealing with server updates: **");
 	puts(" u: Send cdpr information to a cdpr server\n    requires config file as arg");
 	puts(" l: Location/description of this port for use with -u");
-	puts(" n: Override the hostname reported to the server");
+	puts(" n: Override the hostname reported to the server for use with -u");
+	puts(" s: Server to send information to (overridden by -u)");
+	puts(" p: Path of server script to send data to (overridden by -u)");
 
 	exit(0);
 }
@@ -463,6 +465,8 @@ main(int argc, char *argv[])
 	char *conf = NULL;
 	char *loc = NULL;
 	char *name = NULL;
+	char *svr = NULL;
+	char *path = NULL;
 	char errbuf[PCAP_ERRBUF_SIZE];
 	struct bpf_program filter;
 	/*
@@ -491,6 +495,7 @@ main(int argc, char *argv[])
 	/* Zero out some global variables */
 	timeout=1;
 	cdprs=0;
+	cdprs_cmdline=0;
 	memset (errbuf, 0, sizeof (errbuf));
 
 	/* Print out header */
@@ -498,7 +503,7 @@ main(int argc, char *argv[])
 	printf("Copyright (c) 2002-2003 - MonkeyMental.com\n\n");
 
 	/* Check command-line options */
-	while((c = getopt(argc, argv, "d:t:vhu:l:n:")) !=EOF)
+	while((c = getopt(argc, argv, "d:t:vhu:l:n:s:p:")) !=EOF)
 		switch(c)
 		{
 			case 'd':
@@ -514,6 +519,10 @@ main(int argc, char *argv[])
 			case 'u':
 				conf = optarg;
 				cdprs = 1;
+				if(cdprs_cmdline)
+				{
+					puts("Overriding comand line server arguments with config file\n");
+				}
 				cdprs_action(CDPRS_INIT, conf, 0);
 				break;
 			case 'l':
@@ -524,11 +533,32 @@ main(int argc, char *argv[])
 				name = optarg;
 				nameoverride = 1;
 				break;
+			case 's':
+				svr = optarg;
+				cdprs = 1;
+				cdprs_cmdline = 1;
+				break;
+			case 'p':
+				path = optarg;
+				if(cdprs != 1) cdprs = 1;
+				if(cdprs_cmdline != 1) cdprs_cmdline = 1;
+				break;
 			case 'h':
 			case '?':
 				usage();
 				break;
 		}
+
+	/*
+	** If we are using command line server paths, validate and buld
+	** build data structure using functions that are normally used
+	** when parsing the config file
+	*/
+	if(cdprs && cdprs_cmdline)
+	{
+		cdprs_action(CDPRS_INIT, "", 0);
+		do_something_with(svr, path);
+	}
 
 	/* Get a pcap capable device */
 	if(dev == NULL)
