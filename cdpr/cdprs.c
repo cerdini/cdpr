@@ -23,11 +23,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#if WIN32
+#include "Winsock2.h"
+#else
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#endif
 #include "cdpr.h"
 
 void
@@ -136,7 +140,7 @@ send_update(char *ip, char *msg, int verbose)
 }
 
 int
-cdprs_action(int action, char *string, int url_encode)
+cdprs_action(int action, char *string, int verbose)
 {
 	static char *msg;
 	static char *ip;
@@ -177,7 +181,7 @@ cdprs_action(int action, char *string, int url_encode)
 			/* Tack on the hostname and footer and send data to server */
 			get_hostname();
 			cdprs_footer();
-			send_update(ip,msg,url_encode);
+			send_update(ip,msg,verbose);
 			/* We have sent the msg to the server, free the mem used by msg */
 			free(msg);
 			break;

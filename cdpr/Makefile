@@ -3,10 +3,7 @@
 #CFLAGS=-Wall -ggdb -lpcap -I/usr/include/pcap
 
 # Standard build with pcap installed on the system
-CFLAGS = -Wall -ggdb -DCDPRS
-
-# Standard build with pcap installed on the system include CDPRS options
-#CFLAGS = -Wall -ggdb -DCDPRS
+CFLAGS = -Wall -ggdb
 
 # Build for the Zaurus with the pcap headers/libs one dir up
 #CFLAGS = -DZAURUS -Wall -I. -I../libpcap-0.7.1 -L../libpcap-0.7.1 -ggdb

@@ -600,7 +600,7 @@ main(int argc, char *argv[])
 		{
 			set_location(loc);
 		}
-		cdprs_action(CDPRS_SEND, "", 0);
+		cdprs_action(CDPRS_SEND, "", verbose);
 	}
 	return(0);
 }
