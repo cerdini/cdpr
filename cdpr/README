@@ -1,5 +1,16 @@
 cdpr - Cisco Discovery Protocol Reporter
-Copyright (c) 2002 MonkeyMental.com
+Copyright (c) 2002-2003 MonkeyMental.com
+
+*Version 1.0.7
+
+Support for Win32 clients please read README.Win32.
+To support the Win32 clients, modified so that if a network device is not specified
+on the command line with -d, then to find all devices that are capable of being used
+by the pcap libary and provide a selection list.
+
+*Version 1.0.6
+
+Fixed up some more bus errors/segmentation faults.
 
 *Version 1.0.5
 

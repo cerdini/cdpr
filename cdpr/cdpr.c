@@ -30,13 +30,19 @@
 * 1.0.5	LO	02-07-14	Copy packet data to local struct to resolve Bus Errors
 *						on Sun machines.
 * 1.0.6	LO	02-07-15	More alignment fixes.
+* 1.0.7	LO	02-10-29	Port to Win32, autodetection and list generation of
+*						PCAP capable devices.
 */
 
 #include <pcap.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef WIN32
+#include "xgetopt.h"
+#else
 #include <unistd.h>
+#endif
 #include "cdp.h"
 
 
@@ -98,7 +104,7 @@ get_cdp_type (int type)
 void
 print_cdp_address (u_char *v, int vlen, int verbose)
 {
-	int i;
+	u_int32_t i;
 	u_int32_t number;
 
 	memcpy (&number, v, sizeof (number));
@@ -203,7 +209,7 @@ print_cdp_packet (const u_char *p, int plen, int verbose)
 	
 		if(verbose > 0 )
 		{
-                        printf ("\ncdp type/len/val:\n");
+            printf ("\ncdp type/len/val:\n");
 			printf ("  type:   %04x - %s\n", type, get_cdp_type (type));
 			printf ("  length: %04x\n", length);
 		}
@@ -401,8 +407,8 @@ int
 main(int argc, char *argv[])
 {
 	pcap_t *handle;
-	char *dev;
-	char errbuf[PCAP_ERRBUF_SIZE]="";
+	char *dev = NULL;
+	char errbuf[PCAP_ERRBUF_SIZE];
 	struct bpf_program filter;
 	/*
 	** Filter Expression: 01:00:0c:cc:cc:cc Multicast Mac Address
@@ -413,21 +419,22 @@ main(int argc, char *argv[])
 	bpf_u_int32 net;
 	struct pcap_pkthdr header;
 	const u_char *packet;
-	char version[] = "1.0.6";
+	char version[] = "1.0.7";
 
-	int c,sd=0,verbose=0;
+	int c;
+	int verbose=0;
 
+	memset (errbuf, 0, sizeof (errbuf));
 
 	/* Print out header */
 	printf("cdpr - Cisco Discovery Protocol Reporter Version %s\n", version);
-	printf("Copyright (c) 2002 - MonkeyMental.com\n\n");
+	printf("Copyright (c) 2002-2003 - MonkeyMental.com\n\n");
 
 	/* Check command-line options */
 	while((c = getopt(argc, argv, "d:vh")) !=EOF)
 		switch(c)
 		{
 			case 'd':
-				sd = 1;
 				dev = optarg;
 				break;
 			case 'v':
@@ -440,13 +447,54 @@ main(int argc, char *argv[])
 		}
 
 	/* Get a pcap capable device */
-	if(sd != 1)
+	if(dev == NULL)
 	{
-		if((dev = pcap_lookupdev(errbuf)) == NULL)
+		int i = 0;
+		int inum;
+		pcap_if_t *d;
+		pcap_if_t *alldevs;
+
+		/* The user didn't provide a packet source: Retrieve the device list */
+		if (pcap_findalldevs(&alldevs, errbuf) == -1)
 		{
-			printf("Error finding device (%s)\n", errbuf);
+			fprintf(stderr,"Error in pcap_findalldevs: %s\n", errbuf);
 			exit(1);
 		}
+		
+		/* Print the list */
+		for(d=alldevs; d; d=d->next)
+		{
+			printf("%d. %s", ++i, d->name);
+			if (d->description)
+				printf(" (%s)\n", d->description);
+			else
+				printf(" (No description available)\n");
+		}
+		
+		if(i==0)
+		{
+			printf("\nNo interfaces found! Make sure WinPcap is installed.\n");
+			return -1;
+		}
+		
+		printf("Enter the interface number (1-%d):",i);
+		scanf("%d", &inum);
+		
+		if(inum < 1 || inum > i)
+		{
+			printf("\nInterface number out of range.\n");
+			/* Free the device list */
+			pcap_freealldevs(alldevs);
+			return -1;
+		}
+		
+		/* Jump to the selected adapter */
+		for(d=alldevs, i=0; i< inum-1 ;d=d->next, i++)
+		{
+			;
+		}
+		
+		dev = d->name;
 	}
 
     printf("Using Device: %s\n", dev);
@@ -472,7 +520,8 @@ main(int argc, char *argv[])
 	pcap_setfilter(handle, &filter);
 
 	/* Get the next packet that comes in, we only need one */
-	printf("Waiting for CDP advertisement, default config is to transmit CDP packets every 60 seconds\n");
+	printf("Waiting for CDP advertisement:\n");
+	printf("(default config is to transmit CDP packets every 60 seconds)\n");
 	do
 	{
 		packet = pcap_next(handle, &header);

@@ -1,0 +1,25 @@
+cdpr version 1.0.7 supports Win32 clients, it has been tested against
+WinPcap version 3.0 alpha 4 (http://winpcap.polito.it/install/default.htm).
+
+I have compiled it with Microsoft Visual C++ 6.0.
+
+To build it from source download the WinPcap Developers Pack version 
+3.0 alpha 4 and unzip it into the cdpr source tree.
+
+Your directory structure should looks something like this:
+
+\cdpr
+ +-wpdpack
+  +-docs
+  +-Examples
+  +-Include
+  +-Lib
+
+I have included the Workspace files so that you should be able to just
+open cdpr.dsw
+
+When you build it it will create a directory called Release and Debug and
+put the appropriate binaries in each (cdpr.exe)
+
+Lance O'Connor
+lance@monkeymental.com
