@@ -63,12 +63,15 @@ cdprs_footer(void)
 }
 
 void
-get_hostname(void)
+get_hostname(char uname[256])
 {
-	char uname[256];
+//	char uname[256];
 	char *hheader="&host=";
 
-	gethostname(uname, sizeof(uname));
+	if(uname == NULL)
+	{
+		gethostname(uname, sizeof(uname));
+	}
 		
 	cdprs_action(CDPRS_DATA, hheader, 0);
 	cdprs_action(CDPRS_DATA, uname, 0);
@@ -138,6 +141,11 @@ send_update(char *ip, char *msg, int verbose)
 	struct sockaddr_in cdprs_addr;
 	
 	sockfd=socket(AF_INET, SOCK_STREAM, 0);
+	if(sockfd < 0)
+	{
+		perror("socket");
+		return 1;
+	}
 	
 	cdprs_addr.sin_family = AF_INET;
 	cdprs_addr.sin_port = htons(80);
@@ -148,17 +156,30 @@ send_update(char *ip, char *msg, int verbose)
 	{
 		printf("Message: %s\n", msg);
 	}
-	connect(sockfd, (struct sockaddr *)&cdprs_addr, sizeof(struct sockaddr));
+	if(connect(sockfd, (struct sockaddr *)&cdprs_addr, sizeof(struct sockaddr)) < 0)
+	{
+		perror("connect");
+		return 1;
+	}
 	
 	msg_len = strlen(msg);
 	bytes_sent = send(sockfd, msg, msg_len, 0);
+	if(bytes_sent < 0)
+	{
+		perror("send");
+		return 1;
+	}
 	
 	if(verbose >=2)
 	{
 		printf("Sent %d of %d bytes\n", bytes_sent, msg_len);
 	}
 	
-	shutdown(sockfd,2);
+	if(shutdown(sockfd,2) < 0)
+	{
+		perror("shutdown");
+		return 1;
+	}
 
 
 	
@@ -208,7 +229,7 @@ cdprs_action(int action, char *string, int verbose)
 			break;
 		case CDPRS_SEND:
 			/* Tack on the hostname and footer and send data to server */
-			get_hostname();
+//			get_hostname();
 			cdprs_footer();
 			send_update(ip,msg,verbose);
 			/* We have sent the msg to the server, free the mem used by msg */

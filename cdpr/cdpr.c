@@ -432,7 +432,8 @@ usage(void)
 	puts("d: Specify device to use (eth0, hme0, etc.)");
 	puts("v[vv]: Set verbose mode");
 	puts("u: Send cdpr information to a cdpr server\n   requires config file as arg");
-	puts("l: location/description of this port");
+	puts("l: Location/description of this port for use with -u");
+	puts("n: Override the hostname reported to the server");
 	puts("h: Print this usage");
 
 	exit(0);
@@ -445,6 +446,7 @@ main(int argc, char *argv[])
 	char *dev = NULL;
 	char *conf = NULL;
 	char *loc = NULL;
+	char *name = NULL;
 	char errbuf[PCAP_ERRBUF_SIZE];
 	struct bpf_program filter;
 	/*
@@ -466,6 +468,7 @@ main(int argc, char *argv[])
 	int c;
 	int verbose=0;
 	int locdetail=0;
+	int nameoverride=0;
 
 	memset (errbuf, 0, sizeof (errbuf));
 
@@ -474,7 +477,7 @@ main(int argc, char *argv[])
 	printf("Copyright (c) 2002-2003 - MonkeyMental.com\n\n");
 
 	/* Check command-line options */
-	while((c = getopt(argc, argv, "d:vu:l:h")) !=EOF)
+	while((c = getopt(argc, argv, "d:vu:l:n:h")) !=EOF)
 		switch(c)
 		{
 			case 'd':
@@ -491,6 +494,10 @@ main(int argc, char *argv[])
 			case 'l':
 				loc = optarg;
 				locdetail = 1;
+				break;
+			case 'n':
+				name = optarg;
+				nameoverride = 1;
 				break;
 			case 'h':
 			case '?':
@@ -600,6 +607,14 @@ main(int argc, char *argv[])
 		if(locdetail >=1)
 		{
 			set_location(loc);
+		}
+		if(nameoverride >= 1)
+		{
+			get_hostname(name);
+		}
+		else
+		{
+			get_hostname(NULL);
 		}
 		cdprs_action(CDPRS_SEND, "", verbose);
 	}

@@ -29,5 +29,6 @@
 
 int	cdprs_action(int action, char *string, int verbose);
 void set_location(char *loc);
+void get_hostname(char name[256]);
 void read_file(char *file);
 char * urlencode(char *s, int slen, int *new_len);
