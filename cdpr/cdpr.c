@@ -31,10 +31,12 @@
 *						on Sun machines.
 * 1.0.6	LO	02-07-15	More alignment fixes.
 * 1.0.7	LO	02-10-29	Port to Win32, autodetection and list generation of
-*						PCAP capable devices.
+*				PCAP capable devices.
+* 1.0.8	LO	03-02-13	Port to arm processor (Zaurus) using a filter specific
+* 				to arm processors to work around pcap bug
 */
 
-#include <pcap.h>
+#include "pcap.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -42,6 +44,9 @@
 #include "xgetopt.h"
 #else
 #include <unistd.h>
+#endif
+#ifdef SOLARIS
+#include "u_ints.h"
 #endif
 #include "cdp.h"
 
@@ -397,7 +402,7 @@ int
 usage(void)
 {
 	puts("d: Specify device to use (eth0, hme0, etc.)");
-	puts("v: Set verbose mode");
+	puts("v[vv]: Set verbose mode");
 	puts("h: Print this usage");
 
 	exit(0);
@@ -412,14 +417,19 @@ main(int argc, char *argv[])
 	struct bpf_program filter;
 	/*
 	** Filter Expression: 01:00:0c:cc:cc:cc Multicast Mac Address
+	** This filter doesn't work on the arm, so use all multicast
 	** ether[20:2] = 0x2000: CDP signature in LLC
 	*/
+#ifdef ZAURUS
+	char filter_app[] = "ether multicast and ether[20:2] = 0x2000";
+#else
 	char filter_app[] = "ether host 01:00:0c:cc:cc:cc and ether[20:2] = 0x2000";
+#endif
 	bpf_u_int32 mask;
 	bpf_u_int32 net;
 	struct pcap_pkthdr header;
 	const u_char *packet;
-	char version[] = "1.0.7";
+	char version[] = "1.0.8";
 
 	int c;
 	int verbose=0;
@@ -427,7 +437,7 @@ main(int argc, char *argv[])
 	memset (errbuf, 0, sizeof (errbuf));
 
 	/* Print out header */
-	printf("cdpr - Cisco Discovery Protocol Reporter Version %s\n", version);
+	printf("cdpr - Cisco Discovery Protocol Reporter\nVersion %s\n", version);
 	printf("Copyright (c) 2002-2003 - MonkeyMental.com\n\n");
 
 	/* Check command-line options */
@@ -473,7 +483,7 @@ main(int argc, char *argv[])
 		
 		if(i==0)
 		{
-			printf("\nNo interfaces found! Make sure WinPcap is installed.\n");
+			printf("\nNo interfaces found! Make sure pcap is installed.\n");
 			return -1;
 		}
 		
@@ -497,7 +507,7 @@ main(int argc, char *argv[])
 		dev = d->name;
 	}
 
-    printf("Using Device: %s\n", dev);
+	printf("Using Device: %s\n", dev);
 
 	/* Get the network number and netmask */
 	pcap_lookupnet(dev, &net, &mask, errbuf);
@@ -518,6 +528,7 @@ main(int argc, char *argv[])
 
 	/* Activate the pcap filter */
 	pcap_setfilter(handle, &filter);
+	pcap_freecode(&filter);
 
 	/* Get the next packet that comes in, we only need one */
 	printf("Waiting for CDP advertisement:\n");

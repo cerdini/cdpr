@@ -2,8 +2,19 @@
 # Uncomment the below line for RH systems.
 #CFLAGS=-Wall -ggdb -lpcap -I/usr/include/pcap
 
-CFLAGS = -Wall -ggdb
+# Standard build with pcap installed on the system
+#CFLAGS = -Wall -ggdb
+
+# Build for the Zaurus with the pcap headers/libs one dir up
+CFLAGS = -DZAURUS -Wall -I. -I../libpcap-0.7.1 -L../libpcap-0.7.1 -ggdb
+
+# Build for Solaris with the pcap headers/libs one dir up
+#CFLAGS = -DSOLARIS -Wall -I. -I../libpcap-0.7.1 -L../libpcap-0.7.1 -ggdb
+
 LDFLAGS = -lpcap
+
+# Build for Solaris
+#LDFLAGS = -lsocket -lnsl -lpcap
 
 cdpr: cdpr.c cdp.h
 	gcc $(CFLAGS) cdpr.c $(LDFLAGS) -o cdpr
