@@ -46,6 +46,7 @@
 *						checking to the socket code.
 * 1.1.5	LO	03-06-23	Fix bug where hostname would not be transmitted w/o location set
 * 2.0.0	LO	03-06-25	Release - Major revision change due to server reporting code
+* 2.0.1	LO	03-07-01	Add sys/types.h to the includes in conffile.c for BSD support
 */
 
 #include "pcap.h"
@@ -468,7 +469,7 @@ main(int argc, char *argv[])
 	bpf_u_int32 net;
 	struct pcap_pkthdr header;
 	const u_char *packet;
-	char version[] = "2.0.0";
+	char version[] = "2.0.1";
 
 	int c;
 	int verbose=0;
