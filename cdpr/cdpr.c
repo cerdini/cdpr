@@ -52,6 +52,9 @@
 * 2.0.4	LO	03-08-05	Timeout code that actually timesout. Set device to nonblocking
 *						mode and loop until packet or timeout. Before, pcap_next would
 *						block so the signal handler couldn't acutally exit.
+* 2.0.5	LO	03-10-22	Went back to pcap_next() to get the packet, add a default timeout
+*						of 5 minutes. Got rid of pktcap.c and timeout.c as they are no
+*						longer needed.
 */
 
 /*#include "pcap.h" */
@@ -475,14 +478,14 @@ main(int argc, char *argv[])
 	bpf_u_int32 net;
 	struct pcap_pkthdr header;
 	const u_char *packet;
-	char version[] = "2.0.4";
+	char version[] = "2.0.5";
 
 	int c;
 	int verbose=0;
 	int locdetail=0;
 	int nameoverride=0;
 //	int settimeout=0;
-	unsigned int seconds=0;
+	unsigned int seconds=300;
 	time_t start_time=0;
 
 	/* Zero out some global variables */
@@ -603,20 +606,21 @@ main(int argc, char *argv[])
 	pcap_freecode(&filter);
 
 	/* If timeout is enabled, enable the timeout handler and set timeout */
-	/*
-	if(settimeout > 0)
-	{
-		if(enable_timeout() != 0)
-		{
-			printf("Error setting timeout\n");
-			exit(1);
-		}
-		else
-		{
-			set_timeout(seconds);
-		}
-	}
-	*/
+/*
+**	if(settimeout > 0)
+**	{
+**		if(enable_timeout() != 0)
+**		{
+**			printf("Error setting timeout\n");
+**			exit(1);
+**		}
+**		else
+**		{
+**			set_timeout(seconds);
+**		}
+**	}
+*/
+
 	/* Set non-blocking mode */
 	if(pcap_setnonblock(handle, 1, errbuf))
 	{
@@ -631,7 +635,7 @@ main(int argc, char *argv[])
 	start_time = time(NULL);
 	do
 	{
-		packet = pkt_next(handle, &header);
+		packet = pcap_next(handle, &header);
 		usleep(10000);
 	} while ((!packet) && ( timeout=((start_time+seconds) > (unsigned int)time(NULL))) );
 

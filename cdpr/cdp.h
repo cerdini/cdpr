@@ -33,9 +33,9 @@
 #define TYPE_PLATFORM			0x0006
 #define TYPE_IP_PREFIX			0x0007
 
-#define TYPE_VTP_MGMT_DOMAIN	0x0009
+#define TYPE_VTP_MGMT_DOMAIN		0x0009
 #define TYPE_NATIVE_VLAN		0x000a
-#define TYPE_DUPLEX				0x000b
+#define TYPE_DUPLEX			0x000b
 
 struct
 {
