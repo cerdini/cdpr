@@ -379,18 +379,22 @@ usage(void)
 int
 main(int argc, char *argv[])
 {
-	pcap_t *handle;										/* Session handle */
-	char *dev;											/* Find a device */
-	char errbuf[PCAP_ERRBUF_SIZE]="";					/* Error string */
-	struct bpf_program filter;							/* The compiled filter expression */
-	char filter_app[] = "ether host 01:00:0c:cc:cc:cc";	/* The filter expression */
-	bpf_u_int32 mask;									/* The netmask of our sniffing device */
-	bpf_u_int32 net;									/* The IP of our sniffing device */
-	struct pcap_pkthdr header;							/* The header that pcap gives us */
-	const u_char *packet;								/* The actual packet */
-	char version[] = "1.0.1";							/* Version Number */
+	pcap_t *handle;
+	char *dev;
+	char errbuf[PCAP_ERRBUF_SIZE]="";
+	struct bpf_program filter;
+	/*
+	** Filter Expression: 01:00:0c:cc:cc:cc Multicast Mac Address
+	** ether[20:2] = 0x2000: CDP signature in LLC
+	*/
+	char filter_app[] = "ether host 01:00:0c:cc:cc:cc and ether[20:2] = 0x2000";
+	bpf_u_int32 mask;
+	bpf_u_int32 net;
+	struct pcap_pkthdr header;
+	const u_char *packet;
+	char version[] = "1.0.2";
 
-	int c,sd=0,verbose=0;								/* Used for getopt, and spec. verbose lvl */
+	int c,sd=0,verbose=0;
 
 
 	/* Print out header */
