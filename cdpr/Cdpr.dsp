@@ -91,12 +91,36 @@ SOURCE=.\cdpr.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\cdprs.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\conffile.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\XGetopt.c
 # End Source File
 # End Group
 # Begin Group "Header Files"
 
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
+# Begin Source File
+
+SOURCE=.\cdp.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\cdpr.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\u_ints.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\XGetopt.h
+# End Source File
 # End Group
 # Begin Group "Resource Files"
 

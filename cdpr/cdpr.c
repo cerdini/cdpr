@@ -1,6 +1,6 @@
 /*
 * cdpr - Cisco Discovery Protocol Reporter
-* Copyright <c) 2002 MonkeyMental.com
+* Copyright (c) 2002-2003 MonkeyMental.com
 *
 * This program will show you which Cisco device your machine is
 * connected to based on CDP packets received.
@@ -55,6 +55,7 @@
 * 2.0.5	LO	03-10-22	Went back to pcap_next() to get the packet, add a default timeout
 *						of 5 minutes. Got rid of pktcap.c and timeout.c as they are no
 *						longer needed.
+* 2.1.0	LO	03-11-08	Release - Got timeout code working on WIN32 port
 */
 
 /*#include "pcap.h" */
@@ -62,17 +63,17 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <unistd.h>
 #ifdef WIN32
 #include "xgetopt.h"
+#include "time.h"
 #else
 #include <unistd.h>
 #endif
 #ifdef SOLARIS
 #include "u_ints.h"
 #endif
-#include "cdp.h"
 #include "cdpr.h"
+#include "cdp.h"
 
 void
 dump_ip (const u_char *ip)
@@ -478,13 +479,12 @@ main(int argc, char *argv[])
 	bpf_u_int32 net;
 	struct pcap_pkthdr header;
 	const u_char *packet;
-	char version[] = "2.0.5";
+	char version[] = "2.1.0";
 
 	int c;
 	int verbose=0;
 	int locdetail=0;
 	int nameoverride=0;
-//	int settimeout=0;
 	unsigned int seconds=300;
 	time_t start_time=0;
 
@@ -509,7 +509,6 @@ main(int argc, char *argv[])
 				break;
 			case 't':
 				seconds = atoi(optarg);
-//				settimeout = 1;
 				printf("Timeout enabled for %u seconds\n", seconds);
 				break;
 			case 'u':
@@ -605,22 +604,6 @@ main(int argc, char *argv[])
 	pcap_setfilter(handle, &filter);
 	pcap_freecode(&filter);
 
-	/* If timeout is enabled, enable the timeout handler and set timeout */
-/*
-**	if(settimeout > 0)
-**	{
-**		if(enable_timeout() != 0)
-**		{
-**			printf("Error setting timeout\n");
-**			exit(1);
-**		}
-**		else
-**		{
-**			set_timeout(seconds);
-**		}
-**	}
-*/
-
 	/* Set non-blocking mode */
 	if(pcap_setnonblock(handle, 1, errbuf))
 	{
@@ -636,11 +619,15 @@ main(int argc, char *argv[])
 	do
 	{
 		packet = pcap_next(handle, &header);
+#ifdef WIN32
+		Sleep(10000);
+#else
 		usleep(10000);
+#endif
 	} while ((!packet) && ( timeout=((start_time+seconds) > (unsigned int)time(NULL))) );
 
 	/*
-	** sigalarm received. clean up and exit
+	** timeout expired. clean up and exit
 	*/
 	if(timeout == 0)
 	{
@@ -648,9 +635,6 @@ main(int argc, char *argv[])
 		pcap_close(handle);
 		return(2);
 	}
-
-	/* Got a packet, disable the alarm */
-//	set_timeout(0);
 
 	/* Print its length */
 	if(verbose > 0)
@@ -669,7 +653,6 @@ main(int argc, char *argv[])
 	pcap_close(handle);
 	if(cdprs >=1)
 	{
-//		memset(uname, 0, 256);
 		if(locdetail >=1)
 		{
 			set_location(loc);

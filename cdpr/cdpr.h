@@ -1,6 +1,6 @@
 /*
 * cdpr - Cisco Discovery Protocol Reporter
-* Copyright <c) 2002 MonkeyMental.com
+* Copyright (c) 2002-2003 MonkeyMental.com
 *
 * This program will show you which Cisco device your machine is
 * connected to based on CDP packets received.

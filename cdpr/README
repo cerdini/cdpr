@@ -1,6 +1,20 @@
 cdpr - Cisco Discovery Protocol Reporter
 Copyright (c) 2002-2003 MonkeyMental.com
 
+*Version 2.1.0
+
+This version provides the ability to include a timeout so that you can put cdpr
+into startup scripts and not have it hang if for some reason a CDP packet is never
+received (i.e. CDP is disabled, machine is plugged into a hub, etc.) The following
+command line option has been added:
+
+-t timeout: Specify a timeout (in seconds) to wait for a CDP packet.
+
+Please note that the default time between CDP packets is 60 seconds so you should
+set your timeout to something greater than 60. There is a default timeout of 5 minutes
+so that should you not provide a timeout, cdpr will still exit if there is no CDP
+packet received within 5 minutes.
+
 *Version 2.0.0
 
 This version provides the functionallity to report CDP data back to a centralized server.
