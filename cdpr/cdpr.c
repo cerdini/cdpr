@@ -18,6 +18,11 @@
 * You should have received a copy of the GNU General Public License
 * along with this program; if not, write to the Free Software
 * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+*
+* Version History:
+*
+* 1.0.0	LO	02-06-30	Initial Release
+* 1.0.1	LO	02-07-01	ifdef/endif DLT types to deal with older bpf.h headers
 */
 
 #include <pcap.h>
@@ -284,48 +289,76 @@ print_dlt(pcap_t *handle)
 	/* Print the DLL Type*/
 	switch(type = pcap_datalink(handle))
 	{
+#ifdef DLT_NULL
 		case DLT_NULL:
 			printf("Data Link Type: BSD Loopback encapsulation.\n");
 			break;
+#endif
+#ifdef DLT_EN10MB
 		case DLT_EN10MB:
 			printf("Data Link Type: Ethernet (10MB, 100MB, 1000MB and up).\n");
 			break;
+#endif
+#ifdef DLT_IEEE802
 		case DLT_IEEE802:
 			printf("Data Link Type: IEEE 802.5 Token Ring.\n");
 			break;
+#endif
+#ifdef DLT_ARCNET
 		case DLT_ARCNET:
 			printf("Data Link Type: ARCNET.\n");
 			break;
+#endif
+#ifdef DLT_PPP
 		case DLT_PPP:
 			printf("Data Link Type: PPP (Point-to-Point Protocol).\n");
 			break;
+#endif
+#ifdef DLT_FDDI
 		case DLT_FDDI:
 			printf("Data Link Type: FDDI.\n");
 			break;
+#endif
+#ifdef DLT_ATM_RFC1483
 		case DLT_ATM_RFC1483:
 			printf("Data Link Type: RFC 1483 LLC/SNAP-encapsulated ATM.\n");
 			break;
+#endif
+#ifdef DLT_RAW
 		case DLT_RAW:
 			printf("Data Link Type: raw IP.\n");
 			break;
+#endif
+#ifdef DLT_PPP_SERIAL
 		case DLT_PPP_SERIAL:
 			printf("Data Link Type: PPP in HDLC-like framing.\n");
 			break;
+#endif
+#ifdef DLT_PPP_ETHER
 		case DLT_PPP_ETHER:
 			printf("Data Link Type: PPPoE.\n");
 			break;
+#endif
+#ifdef DLT_C_HDLC
 		case DLT_C_HDLC:
 			printf("Data Link Type: Cisco PPP with HDLC framing.\n");
 			break;
+#endif
+#ifdef DLT_IEEE802_11
 		case DLT_IEEE802_11:
 			printf("Data Link Type: IEEE 802.11 wireless LAN.\n");
 			break;
+#endif
+#ifdef DLT_LOOP
 		case DLT_LOOP:
 			printf("Data Link Type: OpenBSD loopback encapsulation.\n");
 			break;
+#endif
+#ifdef DLT_LTALK
 		case DLT_LTALK:
 			printf("Data Link Type: Apple LocalTalk.\n");
 			break;
+#endif
 		default:
 			printf("%d is an unknown Data Link Transport\n", type);
 	}
@@ -355,7 +388,7 @@ main(int argc, char *argv[])
 	bpf_u_int32 net;									/* The IP of our sniffing device */
 	struct pcap_pkthdr header;							/* The header that pcap gives us */
 	const u_char *packet;								/* The actual packet */
-	char version[] = "1.0.0";							/* Version Number */
+	char version[] = "1.0.1";							/* Version Number */
 
 	int c,sd=0,verbose=0;								/* Used for getopt, and spec. verbose lvl */
 
