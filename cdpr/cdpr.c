@@ -23,6 +23,9 @@
 *
 * 1.0.0	LO	02-06-30	Initial Release
 * 1.0.1	LO	02-07-01	ifdef/endif DLT types to deal with older bpf.h headers
+* 1.0.2 LO	02-07-02	New filter to better identify CDP packets
+* 1.0.3 LO	02-07-03	loop on pcap_next until a valid packet is received.
+*						(patch provided Martin Buck <martin.buck@ascom.ch>)
 */
 
 #include <pcap.h>
@@ -392,7 +395,7 @@ main(int argc, char *argv[])
 	bpf_u_int32 net;
 	struct pcap_pkthdr header;
 	const u_char *packet;
-	char version[] = "1.0.2";
+	char version[] = "1.0.3";
 
 	int c,sd=0,verbose=0;
 
@@ -452,7 +455,10 @@ main(int argc, char *argv[])
 
 	/* Get the next packet that comes in, we only need one */
 	printf("Waiting for CDP advertisement, default config is to transmit CDP packets every 60 seconds\n");
-	packet = pcap_next(handle, &header);
+	do
+	{
+		packet = pcap_next(handle, &header);
+	} while (!packet);
 
 	/* Print its length */
 	if(verbose > 0)
