@@ -29,6 +29,7 @@
 * 1.0.4	LO	02-07-10	Added 1ms timeout to pcap_open_live to fix *BSD
 * 1.0.5	LO	02-07-14	Copy packet data to local struct to resolve Bus Errors
 *						on Sun machines.
+* 1.0.6	LO	02-07-15	More alignment fixes.
 */
 
 #include <pcap.h>
@@ -101,7 +102,7 @@ print_cdp_address (u_char *v, int vlen, int verbose)
 	u_int32_t number;
 
 	memcpy (&number, v, sizeof (number));
-        number = ntohl (number);
+	number = ntohl (number);
 
 	if (verbose > 0)
 	{
@@ -114,8 +115,13 @@ print_cdp_address (u_char *v, int vlen, int verbose)
 		u_char protocol      = *v;
 		u_char protocol_len  = *(v+1);
 		u_char *protocol_val = v+2;
-		int    address_len   = ntohs(*((u_int16_t *)(v+2+protocol_len)));
+/*		int    address_len   = ntohs(*((u_int16_t *)(v+2+protocol_len)));*/
+		u_int16_t address_len;
 		u_char *address_val  = v+2+protocol_len+2;
+
+		memcpy (&address_len, (v+2+protocol_len), sizeof(address_len));
+		address_len = ntohs(address_len);
+
 		
 		if (verbose > 0)
 		{
@@ -148,7 +154,7 @@ print_cdp_capabilities (u_char *v, int vlen)
 	u_int32_t cap;
 
 	memcpy (&cap, v, sizeof (cap));
-        cap = ntohl (cap);
+	cap = ntohl (cap);
 
 	printf ("  value:  %08x\n", cap);
 	if (cap & 0x01) printf ("          Performs level 3 routing for at least one network layer protocol.\n");
@@ -205,7 +211,7 @@ print_cdp_packet (const u_char *p, int plen, int verbose)
 		{
 		case TYPE_DEVICE_ID:
 			printf ("%s\n", get_cdp_type (type));
-		        printf ("  value:  %.*s\n", vlen, v);
+			printf ("  value:  %.*s\n", vlen, v);
 			break;
 
 		case TYPE_ADDRESS:
@@ -407,7 +413,7 @@ main(int argc, char *argv[])
 	bpf_u_int32 net;
 	struct pcap_pkthdr header;
 	const u_char *packet;
-	char version[] = "1.0.5";
+	char version[] = "1.0.6";
 
 	int c,sd=0,verbose=0;
 
